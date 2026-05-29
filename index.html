@@ -23,7 +23,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#111827;color:#e2e8f0;mi
 .btn-add:active{background:#1d4ed8;color:#fff}
 
 /* Game summary bar */
-#summary-bar{background:#0f172a;border-bottom:1px solid #1e293b;padding:6px 14px;font-size:11px;color:#475569;display:none}
 
 /* Input screen */
 #input-screen{max-width:600px;margin:0 auto;padding:40px 20px;display:none}
@@ -108,7 +107,6 @@ textarea:focus{outline:none;border-color:#3b82f6}
   <span class="saving-pill" id="saving-pill">Saving...</span>
   <button class="btn-add" onclick="showAppend()">+ Add Game</button>
 </div>
-<div id="summary-bar"></div>
 
 <!-- Input screen (first-time, no games yet) -->
 <div id="input-screen">
@@ -197,7 +195,7 @@ async function loadAllGames() {
         gameCount++;
       }
       rebuildDB(); activeTeam=teamList[0]||null;
-      hide('loading-screen'); showTopBar(); showListView();
+      hide('loading-screen'); showTopBar(); renderList(); showListView();
     } else {
       hide('loading-screen'); show('input-screen');
     }
@@ -356,12 +354,8 @@ function showErr(msg){const el=document.getElementById('error-banner');el.textCo
 function setSaving(on){document.getElementById('saving-pill').style.display=on?'inline':'none';}
 
 function showTopBar(){
-  const tb=document.getElementById('top-bar'); tb.style.display='flex';
-  show('summary-bar'); updateSummary(); renderTeamDropdown();
-}
-function updateSummary(){
-  document.getElementById('summary-bar').textContent=
-    `${gameCount===1?'1 game':gameCount+' games'} · ${allAtBats.length} plate appearances`;
+  document.getElementById('top-bar').style.display='flex';
+  renderTeamDropdown();
 }
 function renderTeamDropdown(){
   const sel=document.getElementById('team-select');
