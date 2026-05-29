@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spray Chart Tool – 11U AA 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#111827;color:#e2e8f0;min-height:100vh}
+/* Loading */
+#loading-screen{position:fixed;inset:0;background:#111827;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999}
+.spinner{width:40px;height:40px;border:3px solid #334155;border-top-color:#3b82f6;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:#64748b}
+/* Input */
+#input-screen{max-width:760px;margin:0 auto;padding:48px 24px;display:none}
+#input-screen h1{font-size:26px;font-weight:700;color:#f1f5f9;margin-bottom:6px}
+.subtitle{font-size:14px;color:#94a3b8;margin-bottom:8px}
+.instructions{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:14px 16px;font-size:13px;color:#94a3b8;margin-bottom:18px;line-height:1.6}
+.instructions strong{color:#cbd5e1}
+textarea{width:100%;height:200px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;padding:14px;font-size:12.5px;font-family:monospace;resize:vertical}
+textarea:focus{outline:none;border-color:#3b82f6}
+.btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn{padding:10px 22px;border-radius:6px;border:none;font-size:14px;font-weight:600;cursor:pointer}
+.btn-primary{background:#2563eb;color:#fff}.btn-primary:hover{background:#1d4ed8}
+.btn-secondary{background:#1e293b;color:#94a3b8;border:1px solid #334155}.btn-secondary:hover{background:#263148}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:5px}
+#error-banner{display:none;background:#7f1d1d;color:#fca5a5;padding:10px 16px;border-radius:6px;font-size:13px;margin-top:12px}
+/* Results */
+#results-screen{display:none;height:100vh;flex-direction:column}
+#top-bar{background:#1e293b;border-bottom:1px solid #334155;padding:10px 18px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+#game-summary{font-size:12px;color:#64748b;flex:1}
+#layout{display:flex;flex:1;overflow:hidden}
+/* Sidebar */
+#sidebar{width:255px;background:#0f172a;border-right:1px solid #1e293b;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.team-tabs{display:flex;border-bottom:1px solid #1e293b;flex-shrink:0}
+.team-tab{flex:1;padding:10px 8px;font-size:11.5px;color:#64748b;cursor:pointer;text-align:center;border-bottom:2px solid transparent;line-height:1.3}
+.team-tab.active{color:#60a5fa;border-bottom-color:#3b82f6}
+.team-tab:hover:not(.active){color:#94a3b8}
+.list-header{padding:8px 14px;font-size:10.5px;color:#475569;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #1e293b;flex-shrink:0}
+#player-list{overflow-y:auto;flex:1}
+.player-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid #0d1627;display:flex;justify-content:space-between;align-items:center}
+.player-item:hover{background:#1a2744}
+.player-item.active{background:#1e3a5f;border-left:3px solid #3b82f6;padding-left:11px}
+.player-name{font-size:13px;font-weight:500;color:#e2e8f0}
+.player-line{font-size:11px;color:#64748b;margin-top:2px}
+.player-avg{font-size:13px;font-weight:600;color:#94a3b8}
+/* Main */
+#main{flex:1;overflow-y:auto;padding:24px;background:#111827}
+#empty-state{display:flex;align-items:center;justify-content:center;height:100%;color:#374151;font-size:15px}
+#chart-area{display:none}
+.chart-row{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.chart-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px}
+.chart-player-name{font-size:20px;font-weight:700;color:#f1f5f9}
+.chart-team-name{font-size:13px;color:#64748b;margin-top:2px;margin-bottom:16px}
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-btn{padding:4px 12px;border-radius:20px;border:1px solid #334155;background:transparent;color:#94a3b8;font-size:12px;cursor:pointer}
+.filter-btn.active{background:#1d4ed8;border-color:#2563eb;color:#fff}
+.filter-btn:hover:not(.active){border-color:#475569;color:#e2e8f0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#94a3b8}
+.stats-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;min-width:200px}
+.stats-title{font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px}
+.stat-label{font-size:10.5px;color:#64748b;text-transform:uppercase}
+.stat-value{font-size:22px;font-weight:700;color:#f1f5f9;margin-top:2px}
+.stat-divider{grid-column:1/-1;border-top:1px solid #334155}
+#play-log-section{margin-top:24px;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px}
+.play-log-title{font-size:14px;font-weight:600;color:#cbd5e1;margin-bottom:14px}
+.play-entry{padding:8px 0;border-bottom:1px solid #1e2d40;display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8}
+.play-entry:last-child{border-bottom:none}
+.play-badge{padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap}
+.badge-1b{background:#14532d;color:#4ade80}.badge-2b{background:#1e3a5f;color:#60a5fa}
+.badge-3b{background:#3b0764;color:#c084fc}.badge-hr{background:#7f1d1d;color:#f87171}
+.badge-out{background:#1f2937;color:#6b7280}.badge-k{background:#1f2937;color:#a855f7}
+.badge-bb{background:#1f2937;color:#38bdf8}
+/* Overlay */
+#append-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center}
+.overlay-box{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:28px;width:90%;max-width:600px}
+.overlay-title{font-size:16px;font-weight:700;margin-bottom:12px}
+.overlay-sub{font-size:13px;color:#94a3b8;margin-bottom:14px}
+.overlay-textarea{width:100%;height:180px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;padding:12px;font-size:12px;font-family:monospace;resize:vertical}
+.saving-indicator{font-size:12px;color:#64748b;margin-left:8px;display:none}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading games...</div>
+</div>
+
+<!-- Input (shown when no games in DB yet) -->
+<div id="input-screen">
+  <h1>Spray Chart Tool – 11U AA 2026</h1>
+  <p class="subtitle">No games loaded yet. Paste the first game to get started.</p>
+  <div class="instructions">
+    <strong>How to use:</strong> Open a game on GameChanger, go to the <em>Plays</em> tab,
+    select all text (Ctrl+A), copy, and paste below. Games are saved automatically and will
+    be available to all coaches at this URL.
+  </div>
+  <textarea id="play-text" placeholder="Paste GameChanger play-by-play text here..."></textarea>
+  <div id="error-banner"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="parse-btn" onclick="handleParse()">Save &amp; Generate Charts</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('play-text').value=''">Clear</button>
+  </div>
+</div>
+
+<!-- Results -->
+<div id="results-screen">
+  <div id="top-bar">
+    <span id="game-summary"></span>
+    <span class="saving-indicator" id="saving-indicator">Saving...</span>
+    <button class="btn btn-secondary btn-sm" onclick="showAppend()">+ Add Game</button>
+  </div>
+  <div id="layout">
+    <div id="sidebar">
+      <div class="team-tabs" id="team-tabs"></div>
+      <div class="list-header">Players (by PA)</div>
+      <div id="player-list"></div>
+    </div>
+    <div id="main">
+      <div id="empty-state">Select a player to view their spray chart</div>
+      <div id="chart-area">
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-player-name" id="chart-name"></div>
+            <div class="chart-team-name" id="chart-team"></div>
+            <div class="filter-row">
+              <button class="filter-btn active" data-filter="all" onclick="applyFilter(this)">All BIP</button>
+              <button class="filter-btn" data-filter="hits" onclick="applyFilter(this)">Hits Only</button>
+              <button class="filter-btn" data-filter="outs" onclick="applyFilter(this)">Outs Only</button>
+            </div>
+            <svg id="spray-svg" viewBox="0 0 420 400" width="390" height="371"></svg>
+            <div class="legend" id="legend"></div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-title">Stats</div>
+            <div class="stat-grid" id="stat-grid"></div>
+          </div>
+        </div>
+        <div id="play-log-section">
+          <div class="play-log-title">At-Bats</div>
+          <div id="play-entries"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Game overlay -->
+<div id="append-overlay">
+  <div class="overlay-box">
+    <div class="overlay-title">Add a Game</div>
+    <p class="overlay-sub">Paste GameChanger play-by-play text. The game will be saved for all coaches.</p>
+    <textarea class="overlay-textarea" id="append-text"></textarea>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-primary" id="append-btn" onclick="handleAppend()">Save Game</button>
+      <button class="btn btn-secondary" onclick="closeAppend()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// --- Supabase ---
+const SUPABASE_URL = 'https://jqddymmlmckupfaexilh.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_1Fou433EFnrLYTI1ZqQTrg_KNJK8LOP';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// --- Constants ---
+const POSITIONS = {
+  'pitcher':'P','catcher':'C','first baseman':'1B','second baseman':'2B',
+  'third baseman':'3B','shortstop':'SS','left fielder':'LF','center fielder':'CF','right fielder':'RF'
+};
+const HX=210, HY=375, BASE=76, OFR=235;
+const ZONE = {
+  'P':{x:210,y:300},'C':{x:210,y:384},
+  '1B':{x:280,y:295},'2B':{x:252,y:255},
+  'SS':{x:168,y:255},'3B':{x:140,y:295},
+  'LF':{x:123,y:224},'CF':{x:210,y:200},'RF':{x:297,y:224}
+};
+const HIT_FILL='#3b82f6', OUT_FILL='#ef4444';
+const IN_PLAY=new Set(['Single','Double','Triple','HR','Ground Out','Fly Out','Line Out','Pop Out','FC','Error','DP']);
+const HITS=new Set(['Single','Double','Triple','HR']);
+
+// --- State ---
+let allAtBats=[], playerDB={}, teamList=[];
+let activeTeam=null, activePlayer=null, activeFilter='all', gameCount=0;
+let gameFingerprints=[];
+
+// --- DB operations ---
+async function loadAllGames() {
+  try {
+    const {data, error} = await sb.from('games').select('fingerprint,label,play_text').order('uploaded_at');
+    if (error) throw error;
+    if (data && data.length > 0) {
+      for (const row of data) {
+        gameFingerprints.push(row.fingerprint);
+        const parsed = parseText(row.play_text);
+        allAtBats = [...allAtBats, ...parsed];
+        gameCount++;
+      }
+      rebuildDB();
+      activeTeam = teamList[0] || null;
+      document.getElementById('loading-screen').style.display='none';
+      showResults();
+    } else {
+      document.getElementById('loading-screen').style.display='none';
+      document.getElementById('input-screen').style.display='block';
+    }
+  } catch(e) {
+    console.error('Load error:', e);
+    document.getElementById('loading-screen').style.display='none';
+    document.getElementById('input-screen').style.display='block';
+  }
+}
+
+async function saveGameToDB(gameText) {
+  const fp = fingerprint(gameText);
+  const label = gameLabel(gameText);
+  const {error} = await sb.from('games').insert({fingerprint:fp, label, play_text:gameText});
+  if (error) console.error('Save error:', error);
+}
+
+// --- Duplicate detection ---
+function splitGames(text) {
+  return text.split(/(?=\bTop\s+1st\s+-)/i).map(s=>s.trim()).filter(Boolean);
+}
+function fingerprint(g) { return g.replace(/\s+/g,' ').trim().slice(0,350); }
+function gameLabel(g) {
+  const v=g.match(/\bTop\s+1st\s+-\s+(.+)/i), h=g.match(/\bBottom\s+1st\s+-\s+(.+)/i);
+  return (v&&h)?`${v[1].trim()} vs ${h[1].trim()}`:v?v[1].trim():'Unknown game';
+}
+function checkDupes(text) {
+  const games=splitGames(text), newGames=[], dupes=[];
+  for (const g of games) {
+    const fp=fingerprint(g);
+    if (gameFingerprints.includes(fp)) dupes.push(gameLabel(g));
+    else newGames.push(g);
+  }
+  return {newGames, dupes};
+}
+function showDupeWarning(labels) {
+  const list=labels.map(l=>`<li style="margin:4px 0">${l}</li>`).join('');
+  const box=document.createElement('div');
+  box.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center';
+  box.innerHTML=`<div style="background:#1e293b;border:1px solid #f59e0b;border-radius:12px;padding:28px;max-width:480px;width:90%">
+    <div style="font-size:16px;font-weight:700;color:#f59e0b;margin-bottom:10px">Duplicate Game Detected</div>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:12px">Already saved — skipped:</p>
+    <ul style="font-size:13px;color:#e2e8f0;padding-left:18px">${list}</ul>
+    <button onclick="this.closest('[style]').remove()" style="margin-top:18px;padding:8px 20px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">OK</button>
+  </div>`;
+  document.body.appendChild(box);
+}
+
+// --- Parsing ---
+const VERB_RE=/(singles?|doubles?|triples?|hits?\s+(?:a\s+)?home\s+run|homers?|grounds?\s+out|flies?\s+out|lines?\s+out(?!field)|pops?\s+out|strikes?\s+out|walks?|is\s+hit\s+by\s+pitch|lines?\s+into\s+fielder|reaches\s+on\s+(?:an?\s+)?(?:\w+\s+)?error|hits?\s+into\s+(?:a\s+)?double)/i;
+
+function parseText(raw) {
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const atBats=[]; let team='', inning=0, half='';
+  for (const line of lines) {
+    const im=line.match(/^(Top|Bottom)\s+\d+(?:st|nd|rd|th)\s+-\s+(.+)$/i);
+    if (im) { half=im[1].toLowerCase(); inning=extractInningNum(line); team=im[2].trim(); continue; }
+    if (!team) continue;
+    const ab=parsePlayLine(line);
+    if (ab) { ab.team=team; ab.inning=inning; ab.half=half; atBats.push(ab); }
+  }
+  return atBats;
+}
+function extractInningNum(line) { const m=line.match(/(\d+)(?:st|nd|rd|th)/i); return m?parseInt(m[1]):0; }
+function parsePlayLine(line) {
+  const nm=line.match(/^([A-Z][a-z]+\s+[A-Z][a-z]*\.?)\s+/);
+  if (!nm) return null;
+  const batter=nm[1].trim(), rest=line.substring(nm[0].length);
+  const vm=rest.match(VERB_RE);
+  if (!vm) return null;
+  const verb=vm[1].toLowerCase().replace(/\s+/g,' ');
+  const result=verbToResult(verb);
+  if (!result) return null;
+  return {batter, result, position:extractPos(line,result), hitType:extractHT(line,result)};
+}
+function verbToResult(v) {
+  if (/^singles?$/.test(v))       return 'Single';
+  if (/^doubles?$/.test(v))       return 'Double';
+  if (/^triples?$/.test(v))       return 'Triple';
+  if (/home run|homers?/.test(v)) return 'HR';
+  if (/grounds? out/.test(v))     return 'Ground Out';
+  if (/flies? out/.test(v))       return 'Fly Out';
+  if (/lines? out/.test(v))       return 'Line Out';
+  if (/pops? out/.test(v))        return 'Pop Out';
+  if (/strikes? out/.test(v))     return 'Strikeout';
+  if (/^walks?$/.test(v))         return 'Walk';
+  if (/hit by pitch/.test(v))     return 'HBP';
+  if (/fielder/.test(v))          return 'FC';
+  if (/error/.test(v))            return 'Error';
+  if (/double/.test(v))           return 'DP';
+  return null;
+}
+function extractPos(line, result) {
+  const PP='(pitcher|catcher|first baseman|second baseman|third baseman|shortstop|left fielder|center fielder|right fielder)';
+  const re=new RegExp(PP,'i');
+  if (HITS.has(result)) {
+    const m=line.match(new RegExp('(?:ball|drive)\\s+to\\s+'+PP,'i'));
+    if (m) return POSITIONS[m[1].toLowerCase()];
+    const m2=line.match(re); if (m2) return POSITIONS[m2[1].toLowerCase()];
+  }
+  if (IN_PLAY.has(result)&&!HITS.has(result)) {
+    const dm=line.match(new RegExp('out\\s+to\\s+'+PP,'i'));
+    if (dm) return POSITIONS[dm[1].toLowerCase()];
+    const fm=line.match(new RegExp('choice\\s+to\\s+'+PP,'i'));
+    if (fm) return POSITIONS[fm[1].toLowerCase()];
+    const rm=line.match(new RegExp('out,\\s*'+PP,'i'));
+    if (rm) return POSITIONS[rm[1].toLowerCase()];
+    const fb=line.match(re); if (fb) return POSITIONS[fb[1].toLowerCase()];
+  }
+  return null;
+}
+function extractHT(line, result) {
+  const l=line.toLowerCase();
+  if (/ground(?:ing|ed)?\s*ball|grounds?\s+out/.test(l)) return 'GB';
+  if (/fly\s*ball|flies?\s+out/.test(l))                 return 'FB';
+  if (/line\s*(?:drive)?|lines?\s+out/.test(l))          return 'LD';
+  if (/pop(?:s?\s*up|s?\s*out)/.test(l))                 return 'PU';
+  return null;
+}
+
+// --- Player DB & Stats ---
+function rebuildDB() {
+  playerDB={}; teamList=[];
+  for (const ab of allAtBats) {
+    if (!playerDB[ab.team]) { playerDB[ab.team]={}; teamList.push(ab.team); }
+    if (!playerDB[ab.team][ab.batter]) playerDB[ab.team][ab.batter]=[];
+    playerDB[ab.team][ab.batter].push(ab);
+  }
+  teamList=[...new Set(teamList)];
+}
+function calcStats(abs) {
+  const s={PA:0,AB:0,H:0,'1B':0,'2B':0,'3B':0,HR:0,BB:0,K:0,HBP:0,GO:0,FO:0,BIP:0};
+  for (const ab of abs) {
+    s.PA++;
+    if (ab.result==='Walk'){s.BB++;continue;}
+    if (ab.result==='HBP'){s.HBP++;continue;}
+    s.AB++;
+    if      (ab.result==='Single')    {s.H++;s['1B']++;s.BIP++;}
+    else if (ab.result==='Double')    {s.H++;s['2B']++;s.BIP++;}
+    else if (ab.result==='Triple')    {s.H++;s['3B']++;s.BIP++;}
+    else if (ab.result==='HR')        {s.H++;s.HR++;s.BIP++;}
+    else if (ab.result==='Ground Out'){s.GO++;s.BIP++;}
+    else if (ab.result==='Fly Out')   {s.FO++;s.BIP++;}
+    else if (['Line Out','Pop Out','FC','DP','Error'].includes(ab.result)){s.BIP++;}
+    else if (ab.result==='Strikeout') {s.K++;}
+  }
+  const avg=s.AB>0?s.H/s.AB:0, obp=s.PA>0?(s.H+s.BB+s.HBP)/s.PA:0;
+  s.AVG=fmt(avg); s.OBP=fmt(obp);
+  s['GB%']=s.BIP>0?Math.round(s.GO/s.BIP*100)+'%':'--';
+  s['K%'] =s.PA >0?Math.round(s.K /s.PA *100)+'%':'--';
+  s['BB%']=s.PA >0?Math.round(s.BB/s.PA *100)+'%':'--';
+  return s;
+}
+function fmt(n){return isNaN(n)?'.000':n.toFixed(3).replace(/^0/,'');}
+
+// --- SVG ---
+function buildField() {
+  const s45=Math.SQRT2/2;
+  const lfx=Math.round(HX-OFR*s45),lfy=Math.round(HY-OFR*s45);
+  const rfx=Math.round(HX+OFR*s45),rfy=lfy,cfy=HY-OFR;
+  const b1x=HX+BASE,b1y=HY-BASE,b2x=HX,b2y=HY-BASE*2,b3x=HX-BASE,b3y=HY-BASE;
+  return `
+  <path d="M${HX},${HY} L${lfx},${lfy} A${OFR},${OFR} 0 0,1 ${rfx},${rfy} Z" fill="#1a3a0a"/>
+  <path d="M${lfx},${lfy} A${OFR},${OFR} 0 0,1 ${rfx},${rfy}" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+  <line x1="${HX}" y1="${HY}" x2="${lfx}" y2="${lfy}" stroke="#e2e8f0" stroke-width="1.5" opacity="0.6"/>
+  <line x1="${HX}" y1="${HY}" x2="${rfx}" y2="${rfy}" stroke="#e2e8f0" stroke-width="1.5" opacity="0.6"/>
+  <path d="M${HX},${HY} L${b1x},${b1y} L${b2x},${b2y} L${b3x},${b3y} Z" fill="#1d4a10"/>
+  <circle cx="${HX}" cy="${HY-BASE}" r="${Math.round(BASE*0.71)}" fill="#2a5e14"/>
+  <line x1="${HX}" y1="${HY}" x2="${b1x}" y2="${b1y}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <line x1="${b1x}" y1="${b1y}" x2="${b2x}" y2="${b2y}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <line x1="${b2x}" y1="${b2y}" x2="${b3x}" y2="${b3y}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <line x1="${b3x}" y1="${b3y}" x2="${HX}" y2="${HY}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <circle cx="${HX}" cy="${HY-BASE}" r="9" fill="#2a5e14" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <rect x="${b1x-6}" y="${b1y-6}" width="12" height="12" rx="1" fill="white" transform="rotate(45,${b1x},${b1y})"/>
+  <rect x="${b2x-6}" y="${b2y-6}" width="12" height="12" rx="1" fill="white" transform="rotate(45,${b2x},${b2y})"/>
+  <rect x="${b3x-6}" y="${b3y-6}" width="12" height="12" rx="1" fill="white" transform="rotate(45,${b3x},${b3y})"/>
+  <polygon points="${HX},${HY-9} ${HX+8},${HY-3} ${HX+8},${HY+5} ${HX-8},${HY+5} ${HX-8},${HY-3}" fill="white"/>
+  <text x="${lfx+22}" y="${lfy+14}" fill="rgba(255,255,255,0.3)" font-size="11" font-family="sans-serif">LF</text>
+  <text x="${HX-9}" y="${cfy+18}" fill="rgba(255,255,255,0.3)" font-size="11" font-family="sans-serif">CF</text>
+  <text x="${rfx-34}" y="${rfy+14}" fill="rgba(255,255,255,0.3)" font-size="11" font-family="sans-serif">RF</text>`;
+}
+function clusterOffset(n,spacing) {
+  if (n===0) return {dx:0,dy:0};
+  let ring=1,start=1;
+  while (start+ring*6<=n) { start+=ring*6; ring++; }
+  const pos=n-start,total=ring*6,angle=(pos/total)*2*Math.PI-Math.PI/2;
+  return {dx:ring*spacing*Math.cos(angle),dy:ring*spacing*Math.sin(angle)};
+}
+function clampToWall(cx,cy) {
+  const dx=cx-HX,dy=cy-HY,dist=Math.sqrt(dx*dx+dy*dy),maxR=OFR-10;
+  if (dist>maxR) { const s=maxR/dist; return {cx:HX+dx*s,cy:HY+dy*s}; }
+  return {cx,cy};
+}
+function buildDots(abs,filter) {
+  let f=abs.filter(ab=>IN_PLAY.has(ab.result)&&ab.position&&ZONE[ab.position]);
+  if (filter==='hits') f=f.filter(ab=>HITS.has(ab.result));
+  if (filter==='outs') f=f.filter(ab=>!HITS.has(ab.result));
+  if (!f.length) return '';
+  const pc={},coords=new Map();
+  for (const ab of f) {
+    const n=pc[ab.position]||0,off=clusterOffset(n,14),z=ZONE[ab.position];
+    let cx=z.x+off.dx,cy=z.y+off.dy;
+    if (ab.result!=='HR') { const c=clampToWall(cx,cy); cx=c.cx; cy=c.cy; }
+    coords.set(ab,{cx,cy}); pc[ab.position]=n+1;
+  }
+  let d='';
+  for (const ab of [...f.filter(ab=>!HITS.has(ab.result)),...f.filter(ab=>HITS.has(ab.result))]) {
+    const {cx,cy}=coords.get(ab);
+    const tip=`${ab.batter}: ${ab.result}${ab.hitType?' ('+ab.hitType+')':''} -> ${ab.position||'?'}`;
+    if (HITS.has(ab.result))
+      d+=`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="8" fill="${HIT_FILL}" stroke="white" stroke-width="1" opacity="0.92"><title>${tip}</title></circle>`;
+    else
+      d+=`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="7" fill="${OUT_FILL}" stroke="white" stroke-width="1" opacity="0.75"><title>${tip}</title></circle>`;
+  }
+  return d;
+}
+
+// --- UI ---
+function setSaving(on) { document.getElementById('saving-indicator').style.display=on?'inline':'none'; }
+function showErr(msg) { const el=document.getElementById('error-banner'); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none',5000); }
+function showAppend() { document.getElementById('append-text').value=''; document.getElementById('append-overlay').style.display='flex'; }
+function closeAppend() { document.getElementById('append-overlay').style.display='none'; }
+
+async function handleParse() {
+  const text=document.getElementById('play-text').value.trim();
+  if (!text) { showErr('Please paste some play-by-play text first.'); return; }
+  const {newGames,dupes}=checkDupes(text);
+  if (dupes.length) showDupeWarning(dupes);
+  if (!newGames.length) return;
+  const parsed=parseText(newGames.join('\n'));
+  if (!parsed.length) { showErr('No plays found. Make sure you pasted GameChanger Plays tab text.'); return; }
+  document.getElementById('parse-btn').disabled=true;
+  setSaving(true);
+  for (const g of newGames) await saveGameToDB(g);
+  newGames.forEach(g=>gameFingerprints.push(fingerprint(g)));
+  allAtBats=parsed; gameCount=newGames.length;
+  rebuildDB(); activeTeam=teamList[0]||null; activePlayer=null; activeFilter='all';
+  setSaving(false);
+  document.getElementById('parse-btn').disabled=false;
+  document.getElementById('input-screen').style.display='none';
+  showResults();
+}
+
+async function handleAppend() {
+  const text=document.getElementById('append-text').value.trim();
+  if (!text) { closeAppend(); return; }
+  const {newGames,dupes}=checkDupes(text);
+  if (dupes.length) showDupeWarning(dupes);
+  if (!newGames.length) { closeAppend(); return; }
+  document.getElementById('append-btn').disabled=true;
+  setSaving(true);
+  for (const g of newGames) await saveGameToDB(g);
+  const parsed=parseText(newGames.join('\n'));
+  if (parsed.length) {
+    newGames.forEach(g=>gameFingerprints.push(fingerprint(g)));
+    allAtBats=[...allAtBats,...parsed]; gameCount+=newGames.length;
+    rebuildDB();
+    if (!teamList.includes(activeTeam)) activeTeam=teamList[0];
+  }
+  setSaving(false);
+  document.getElementById('append-btn').disabled=false;
+  closeAppend(); updateSummary(); renderTabs(); renderList();
+  if (activePlayer&&playerDB[activeTeam]&&playerDB[activeTeam][activePlayer]) renderChart(activePlayer);
+}
+
+function showResults() {
+  document.getElementById('results-screen').style.display='flex';
+  updateSummary(); renderTabs(); renderList(); hideChart();
+}
+function updateSummary() {
+  document.getElementById('game-summary').textContent=
+    `${teamList.join(' vs ')}  |  ${gameCount===1?'1 game':gameCount+' games'}  |  ${allAtBats.length} plate appearances`;
+}
+function renderTabs() {
+  const tabs=document.getElementById('team-tabs');
+  tabs.innerHTML=teamList.map(t=>{
+    const short=t.replace(/\s+\d+[Uu]\s+[A-Za-z]+$/,'').trim();
+    return `<div class="team-tab${t===activeTeam?' active':''}" data-team="${esc(t)}">${short}</div>`;
+  }).join('');
+  tabs.querySelectorAll('.team-tab').forEach(el=>{
+    el.addEventListener('click',()=>{ activeTeam=el.dataset.team; activePlayer=null; activeFilter='all'; renderTabs(); renderList(); hideChart(); });
+  });
+}
+function renderList() {
+  const list=document.getElementById('player-list'), players=playerDB[activeTeam]||{};
+  const sorted=Object.keys(players).sort((a,b)=>calcStats(players[b]).PA-calcStats(players[a]).PA);
+  list.innerHTML=sorted.map(name=>{
+    const s=calcStats(players[name]);
+    return `<div class="player-item${name===activePlayer?' active':''}" data-name="${esc(name)}">
+      <div><div class="player-name">${name}</div>
+      <div class="player-line">${s.PA} PA &nbsp;|&nbsp; ${s.H}/${s.AB} &nbsp;|&nbsp; ${s.K}K ${s.BB}BB</div></div>
+      <div class="player-avg">${s.AVG}</div></div>`;
+  }).join('');
+  list.querySelectorAll('.player-item').forEach(el=>{
+    el.addEventListener('click',()=>{ activePlayer=el.dataset.name; activeFilter='all'; renderList(); renderChart(activePlayer); });
+  });
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function hideChart() {
+  document.getElementById('empty-state').style.display='flex';
+  document.getElementById('chart-area').style.display='none';
+}
+function renderChart(name) {
+  const abs=(playerDB[activeTeam]||{})[name]; if (!abs) return;
+  document.getElementById('empty-state').style.display='none';
+  document.getElementById('chart-area').style.display='block';
+  document.getElementById('chart-name').textContent=name;
+  document.getElementById('chart-team').textContent=activeTeam;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===activeFilter));
+  const svg=document.getElementById('spray-svg');
+  const bip=abs.filter(ab=>IN_PLAY.has(ab.result)&&ab.position&&ZONE[ab.position]);
+  svg.innerHTML=bip.length ? buildField()+buildDots(abs,activeFilter)
+    : buildField()+'<text x="210" y="210" text-anchor="middle" fill="#4b5563" font-size="13" font-family="sans-serif">No balls in play</text>';
+  document.getElementById('legend').innerHTML=`
+    <div class="legend-item"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="${HIT_FILL}" stroke="white" stroke-width="1"/></svg><span>Hit</span></div>
+    <div class="legend-item"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="${OUT_FILL}" stroke="white" stroke-width="1"/></svg><span>Out</span></div>
+    <div class="legend-item" style="color:#475569;font-size:11px;margin-left:4px">Hover for details</div>`;
+  const s=calcStats(abs);
+  document.getElementById('stat-grid').innerHTML=[
+    {l:'AVG',v:s.AVG},{l:'OBP',v:s.OBP},{l:'PA',v:s.PA},{l:'AB',v:s.AB},
+    {l:'H',v:s.H},{l:'XBH',v:s['2B']+s['3B']+s.HR},{l:'BB',v:s.BB},{l:'K',v:s.K},
+    {l:'--'},{l:'K%',v:s['K%']},{l:'BB%',v:s['BB%']},{l:'GB%',v:s['GB%']}
+  ].map(r=>r.l==='--'?'<div class="stat-divider"></div>':`<div><div class="stat-label">${r.l}</div><div class="stat-value">${r.v}</div></div>`).join('');
+  document.getElementById('play-entries').innerHTML=[...abs].reverse().map(ab=>{
+    const pos=ab.position?` -> ${ab.position}`:'', ht=ab.hitType?` (${ab.hitType})`:'';
+    return `<div class="play-entry"><span class="play-badge ${badgeFor(ab.result)}">${ab.result}</span><span>${ab.half==='top'?'T':'B'}${ab.inning}${pos}${ht}</span></div>`;
+  }).join('');
+}
+function applyFilter(btn) {
+  activeFilter=btn.dataset.filter;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  if (activePlayer) renderChart(activePlayer);
+}
+function badgeFor(r) {
+  if (r==='Single')    return 'badge-1b';
+  if (r==='Double')    return 'badge-2b';
+  if (r==='Triple')    return 'badge-3b';
+  if (r==='HR')        return 'badge-hr';
+  if (r==='Strikeout') return 'badge-k';
+  if (r==='Walk'||r==='HBP') return 'badge-bb';
+  return 'badge-out';
+}
+
+// --- Boot ---
+loadAllGames();
+</script>
+</body>
+</html>
