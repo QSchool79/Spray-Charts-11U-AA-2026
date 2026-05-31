@@ -8,13 +8,11 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;background:#111827;color:#e2e8f0;min-height:100vh}
 
-/* Loading */
 #loading-screen{position:fixed;inset:0;background:#111827;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999}
 .spinner{width:36px;height:36px;border:3px solid #334155;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-size:14px;color:#64748b}
 
-/* Top bar */
 #top-bar{position:sticky;top:0;z-index:50;background:#1e293b;border-bottom:1px solid #334155;padding:10px 14px;display:none;align-items:center;gap:10px}
 #team-select{flex:1;background:#0f172a;border:1px solid #334155;border-radius:6px;color:#e2e8f0;font-size:14px;padding:7px 10px;min-width:0;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
 #team-select:focus{outline:none;border-color:#3b82f6}
@@ -22,9 +20,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#111827;color:#e2e8f0;mi
 .btn-add{background:#1e3a5f;color:#60a5fa;border:1px solid #2563eb;border-radius:6px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .btn-add:active{background:#1d4ed8;color:#fff}
 
-/* Game summary bar */
-
-/* Input screen */
 #input-screen{max-width:600px;margin:0 auto;padding:40px 20px;display:none}
 #input-screen h1{font-size:22px;font-weight:700;color:#f1f5f9;margin-bottom:6px}
 .subtitle{font-size:13px;color:#94a3b8;margin-bottom:10px}
@@ -38,7 +33,19 @@ textarea:focus{outline:none;border-color:#3b82f6}
 .btn-secondary{background:#1e293b;color:#94a3b8;border:1px solid #334155}
 #error-banner{display:none;background:#7f1d1d;color:#fca5a5;padding:10px 14px;border-radius:6px;font-size:13px;margin-top:10px}
 
-/* Player list view */
+/* Scouting report card */
+#analysis-section{display:none;background:#1a2744;border-bottom:2px solid #2563eb}
+.analysis-toggle{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.analysis-toggle-title{font-size:13px;font-weight:700;color:#60a5fa;letter-spacing:.02em}
+.analysis-arrow{font-size:11px;color:#64748b;transition:transform .25s}
+.analysis-arrow.open{transform:rotate(180deg)}
+#analysis-content{display:none;padding:0 14px 14px}
+#analysis-summary{font-size:13px;color:#94a3b8;line-height:1.65;margin-bottom:12px}
+#analysis-bullets{padding-left:16px;list-style:none}
+#analysis-bullets li{font-size:13px;color:#cbd5e1;line-height:1.55;margin-bottom:8px;padding-left:4px}
+#analysis-bullets li::before{content:"→ ";color:#3b82f6;font-weight:700}
+.no-data-note{font-size:12px;color:#475569;font-style:italic}
+
 #list-view{display:none}
 .list-header{padding:8px 14px;font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #1e293b;background:#0f172a}
 .player-item{padding:12px 14px;border-bottom:1px solid #0d1627;display:flex;justify-content:space-between;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -47,27 +54,22 @@ textarea:focus{outline:none;border-color:#3b82f6}
 .player-line{font-size:11px;color:#64748b;margin-top:3px}
 .player-avg{font-size:16px;font-weight:700;color:#94a3b8;flex-shrink:0;margin-left:10px}
 
-/* Chart view */
 #chart-view{display:none;padding:0 0 40px}
-#chart-header{padding:10px 14px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:10px}
+#chart-header{padding:10px 14px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:10px;position:sticky;top:var(--topbar-h,52px);z-index:40;background:#111827}
 .back-btn{background:#1e293b;border:1px solid #334155;border-radius:6px;color:#60a5fa;font-size:13px;padding:6px 12px;cursor:pointer;white-space:nowrap}
 .back-btn:active{background:#263148}
 .chart-player-name{font-size:17px;font-weight:700;color:#f1f5f9;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* SVG — full width, maintains 420:400 aspect ratio */
 #svg-wrapper{width:100%;padding:12px 14px}
 #spray-svg{width:100%;height:auto;display:block}
 
-/* Filter buttons */
 .filter-row{display:flex;gap:8px;padding:0 14px 10px;flex-wrap:wrap}
 .filter-btn{padding:5px 14px;border-radius:20px;border:1px solid #334155;background:transparent;color:#94a3b8;font-size:12px;cursor:pointer}
 .filter-btn.active{background:#1d4ed8;border-color:#2563eb;color:#fff}
 
-/* Legend */
 .legend{display:flex;gap:14px;flex-wrap:wrap;padding:0 14px 12px}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#94a3b8}
 
-/* Stats */
 .stats-section{margin:0 14px 16px;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px}
 .stats-title{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -75,7 +77,6 @@ textarea:focus{outline:none;border-color:#3b82f6}
 .stat-value{font-size:20px;font-weight:700;color:#f1f5f9;margin-top:1px}
 .stat-divider{grid-column:1/-1;border-top:1px solid #334155}
 
-/* Play log */
 .log-section{margin:0 14px;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:16px}
 .log-title{font-size:13px;font-weight:600;color:#cbd5e1;margin-bottom:12px}
 .play-entry{padding:7px 0;border-bottom:1px solid #1e2d40;display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8}
@@ -86,7 +87,6 @@ textarea:focus{outline:none;border-color:#3b82f6}
 .badge-out{background:#1f2937;color:#6b7280}.badge-k{background:#1f2937;color:#a855f7}
 .badge-bb{background:#1f2937;color:#38bdf8}
 
-/* Overlay */
 #append-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:flex-end;justify-content:center}
 .overlay-box{background:#1e293b;border-top:1px solid #334155;border-radius:16px 16px 0 0;padding:24px 20px;width:100%;max-width:600px}
 .overlay-title{font-size:16px;font-weight:700;margin-bottom:8px}
@@ -101,14 +101,12 @@ textarea:focus{outline:none;border-color:#3b82f6}
   <div class="loading-text">Loading games...</div>
 </div>
 
-<!-- Top bar (shown after load) -->
 <div id="top-bar">
   <select id="team-select" onchange="selectTeam(this.value)"></select>
   <span class="saving-pill" id="saving-pill">Saving...</span>
   <button class="btn-add" onclick="showAppend()">+ Add Game</button>
 </div>
 
-<!-- Input screen (first-time, no games yet) -->
 <div id="input-screen">
   <h1>Spray Charts – 11U AA 2026</h1>
   <p class="subtitle">No games yet. Paste the first game to get started.</p>
@@ -123,13 +121,21 @@ textarea:focus{outline:none;border-color:#3b82f6}
   </div>
 </div>
 
-<!-- Player list -->
 <div id="list-view">
+  <div id="analysis-section">
+    <div class="analysis-toggle" onclick="toggleAnalysis()">
+      <span class="analysis-toggle-title">Scouting Report</span>
+      <span class="analysis-arrow" id="analysis-arrow">&#9660;</span>
+    </div>
+    <div id="analysis-content">
+      <p id="analysis-summary"></p>
+      <ul id="analysis-bullets"></ul>
+    </div>
+  </div>
   <div class="list-header">Players — tap to view spray chart</div>
   <div id="player-list"></div>
 </div>
 
-<!-- Chart view -->
 <div id="chart-view">
   <div id="chart-header">
     <button class="back-btn" onclick="showListView()">&#8592; Players</button>
@@ -154,7 +160,6 @@ textarea:focus{outline:none;border-color:#3b82f6}
   </div>
 </div>
 
-<!-- Add game overlay -->
 <div id="append-overlay">
   <div class="overlay-box">
     <div class="overlay-title">Add a Game</div>
@@ -182,37 +187,28 @@ const HITS=new Set(['Single','Double','Triple','HR']);
 
 let allAtBats=[],playerDB={},teamList=[],activeTeam=null,activePlayer=null,activeFilter='all',gameCount=0,gameFingerprints=[];
 
-// DB
-async function loadAllGames() {
-  try {
-    const {data,error}=await sb.from('games').select('fingerprint,play_text').order('uploaded_at');
-    if (error) throw error;
-    if (data&&data.length>0) {
-      for (const row of data) {
-        gameFingerprints.push(row.fingerprint);
-        const parsed=parseText(row.play_text);
-        allAtBats=[...allAtBats,...parsed];
-        gameCount++;
-      }
-      rebuildDB(); activeTeam=teamList[0]||null;
-      hide('loading-screen'); showTopBar(); renderList(); showListView();
-    } else {
-      hide('loading-screen'); show('input-screen');
-    }
-  } catch(e) {
-    console.error(e); hide('loading-screen'); show('input-screen');
-  }
+// --- DB ---
+async function loadAllGames(){
+  try{
+    const{data,error}=await sb.from('games').select('fingerprint,play_text').order('uploaded_at');
+    if(error)throw error;
+    if(data&&data.length>0){
+      for(const row of data){gameFingerprints.push(row.fingerprint);const p=parseText(row.play_text);allAtBats=[...allAtBats,...p];gameCount++;}
+      rebuildDB();activeTeam=teamList[0]||null;
+      hide('loading-screen');showTopBar();renderList();renderAnalysis();showListView();
+    }else{hide('loading-screen');show('input-screen');}
+  }catch(e){console.error(e);hide('loading-screen');show('input-screen');}
 }
-async function saveGameToDB(g) {
-  const {error}=await sb.from('games').insert({fingerprint:fingerprint(g),label:gameLabel(g),play_text:g});
-  if (error) console.error(error);
+async function saveGameToDB(g){
+  const{error}=await sb.from('games').insert({fingerprint:fingerprint(g),label:gameLabel(g),play_text:g});
+  if(error)console.error(error);
 }
 
-// Duplicates
+// --- Duplicates ---
 function splitGames(t){return t.split(/(?=\bTop\s+1st\s+-)/i).map(s=>s.trim()).filter(Boolean);}
 function fingerprint(g){return g.replace(/\s+/g,' ').trim().slice(0,350);}
 function gameLabel(g){const v=g.match(/\bTop\s+1st\s+-\s+(.+)/i),h=g.match(/\bBottom\s+1st\s+-\s+(.+)/i);return(v&&h)?`${v[1].trim()} vs ${h[1].trim()}`:v?v[1].trim():'Unknown game';}
-function checkDupes(text){const games=splitGames(text),newGames=[],dupes=[];for(const g of games){const fp=fingerprint(g);if(gameFingerprints.includes(fp))dupes.push(gameLabel(g));else newGames.push(g);}return{newGames,dupes};}
+function checkDupes(text){const games=splitGames(text),newGames=[],dupes=[];for(const g of games){if(gameFingerprints.includes(fingerprint(g)))dupes.push(gameLabel(g));else newGames.push(g);}return{newGames,dupes};}
 function showDupeWarning(labels){
   const list=labels.map(l=>`<li style="margin:4px 0">${l}</li>`).join('');
   const box=document.createElement('div');
@@ -221,7 +217,7 @@ function showDupeWarning(labels){
   document.body.appendChild(box);
 }
 
-// Parse
+// --- Parse ---
 const VERB_RE=/(singles?|doubles?|triples?|hits?\s+(?:a\s+)?home\s+run|homers?|grounds?\s+out|flies?\s+out|lines?\s+out(?!field)|pops?\s+out|strikes?\s+out|walks?|is\s+hit\s+by\s+pitch|lines?\s+into\s+fielder|reaches\s+on\s+(?:an?\s+)?(?:\w+\s+)?error|hits?\s+into\s+(?:a\s+)?double)/i;
 function parseText(raw){
   const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
@@ -269,7 +265,7 @@ function extractHT(line,result){
   if(/line\s*(?:drive)?|lines?\s+out/.test(l))return'LD';if(/pop(?:s?\s*up|s?\s*out)/.test(l))return'PU';return null;
 }
 
-// DB & Stats
+// --- DB & Stats ---
 function rebuildDB(){
   playerDB={};teamList=[];
   for(const ab of allAtBats){
@@ -300,11 +296,130 @@ function calcStats(abs){
 }
 function fmt(n){return isNaN(n)?'.000':n.toFixed(3).replace(/^0/,'');}
 
-// SVG
+// --- Scouting analysis ---
+function shortName(t){return t.replace(/\s+\d+[Uu]\s+[A-Za-z]+$/,'').trim();}
+
+function generateAnalysis(teamName){
+  const players=playerDB[teamName]||{};
+  const allAbs=Object.values(players).flat();
+  if(allAbs.length<15)return null;
+
+  const s=calcStats(allAbs);
+  const bip=allAbs.filter(ab=>IN_PLAY.has(ab.result)&&ab.position&&ZONE[ab.position]);
+  if(bip.length<10)return null;
+
+  // Zone counts
+  const zc={};
+  for(const ab of bip)zc[ab.position]=(zc[ab.position]||0)+1;
+  const total=bip.length;
+
+  const leftSide =(zc['SS']||0)+(zc['3B']||0)+(zc['LF']||0);
+  const rightSide=(zc['1B']||0)+(zc['2B']||0)+(zc['RF']||0);
+  const middle   =(zc['P']||0)+(zc['CF']||0);
+  const infield  =(zc['P']||0)+(zc['C']||0)+(zc['1B']||0)+(zc['2B']||0)+(zc['SS']||0)+(zc['3B']||0);
+  const outfield =(zc['LF']||0)+(zc['CF']||0)+(zc['RF']||0);
+
+  const kPct =parseInt(s['K%'] )||0;
+  const bbPct=parseInt(s['BB%'])||0;
+  const gbPct=parseInt(s['GB%'])||0;
+  const leftPct  =leftSide /total;
+  const rightPct =rightSide/total;
+  const midPct   =middle   /total;
+  const ofPct    =outfield /total;
+
+  const name=shortName(teamName);
+  const bullets=[];
+  let summary='';
+
+  // Contact
+  if(kPct>=35){
+    summary=`${name} has a high strikeout rate (${kPct}%), meaning many at-bats end without the ball being put in play. Pitchers can be aggressive and attack the strike zone.`;
+    bullets.push(`High strikeout rate (${kPct}%) — throw strikes confidently, challenge batters inside the zone`);
+  }else if(kPct<=15){
+    summary=`${name} makes consistent contact (${kPct}% K rate, ${s.AVG} AVG). Expect most at-bats to end with a batted ball — your defense must be ready and positioned correctly.`;
+    bullets.push(`Low strikeout rate (${kPct}%) — most at-bats end in contact, get your defense ready on every pitch`);
+  }else{
+    summary=`${name} is a balanced team with a ${kPct}% strikeout rate and a ${s.AVG} batting average.`;
+    bullets.push(`Moderate strikeout rate (${kPct}%) — mix of contact and swing-and-miss, keep defense alert`);
+  }
+
+  // Walks
+  if(bbPct>=25){
+    summary+=` They draw a lot of walks (${bbPct}%), so pitchers must throw strikes and avoid falling behind in counts.`;
+    bullets.push(`Patient lineup (${bbPct}% walk rate) — avoid 3-ball counts, throw first-pitch strikes`);
+  }else if(bbPct<=10){
+    bullets.push(`Aggressive hitters (${bbPct}% walk rate) — will swing early in counts, use off-speed and change speeds`);
+  }
+
+  // Ground ball tendency
+  if(gbPct>=50){
+    bullets.push(`Ground ball-heavy (${gbPct}% GB rate) — keep the ball down in the zone, ensure infielders are positioned and ready for hard grounders`);
+  }else if(gbPct<=25&&bip.length>=15){
+    bullets.push(`Fly ball tendency (${gbPct}% GB rate) — pitch down in the zone, outfielders should be alert for long flies`);
+  }
+
+  // Spray direction
+  if(leftPct>0.45){
+    bullets.push(`Left-side tendency (${Math.round(leftPct*100)}% of balls in play) — shade your SS and 3B toward the lines, and position your LF accordingly`);
+  }else if(rightPct>0.45){
+    bullets.push(`Right-side tendency (${Math.round(rightPct*100)}% of balls in play) — shade your 1B and 2B toward the right, position RF to cover`);
+  }else if(midPct>0.35){
+    bullets.push(`Up-the-middle tendency (${Math.round(midPct*100)}% of balls in play) — keep SS and 2B tight up the middle, CF plays standard depth`);
+  }else{
+    bullets.push(`Balanced spray chart — no strong side tendency, play straight-up defense and rely on your pitchers`);
+  }
+
+  // Outfield depth
+  if(ofPct>0.45){
+    bullets.push(`Significant outfield volume (${Math.round(ofPct*100)}% of BIP reach the outfield) — outfielders should be ready for routine flies and gap shots`);
+  }
+
+  // Extra bases
+  const xbh=s['2B']+s['3B']+s.HR;
+  if(s.AB>0&&xbh/s.AB>0.12){
+    bullets.push(`Extra-base power — ${xbh} XBH in ${s.AB} at-bats, outfielders should not play too shallow`);
+  }
+
+  // Key hitters (min 6 PA)
+  const threats=Object.entries(players)
+    .filter(([,abs])=>abs.length>=6)
+    .map(([nm,abs])=>({nm,s:calcStats(abs)}))
+    .sort((a,b)=>parseFloat(b.s.OBP)-parseFloat(a.s.OBP))
+    .slice(0,3);
+  if(threats.length>0){
+    bullets.push(`Key batters to watch: ${threats.map(p=>`${p.nm} (${p.s.AVG} AVG, ${p.s.OBP} OBP)`).join(' · ')}`);
+  }
+
+  return{summary,bullets};
+}
+
+let analysisOpen=false;
+function renderAnalysis(){
+  const sec=document.getElementById('analysis-section');
+  if(!activeTeam){sec.style.display='none';return;}
+  const result=generateAnalysis(activeTeam);
+  if(!result){
+    sec.style.display='none';return;
+  }
+  sec.style.display='block';
+  document.getElementById('analysis-summary').textContent=result.summary;
+  document.getElementById('analysis-bullets').innerHTML=result.bullets.map(b=>`<li>${b}</li>`).join('');
+  // Reset to closed when switching teams
+  analysisOpen=false;
+  document.getElementById('analysis-content').style.display='none';
+  document.getElementById('analysis-arrow').classList.remove('open');
+}
+function toggleAnalysis(){
+  analysisOpen=!analysisOpen;
+  document.getElementById('analysis-content').style.display=analysisOpen?'block':'none';
+  document.getElementById('analysis-arrow').classList.toggle('open',analysisOpen);
+}
+
+// --- SVG ---
 function buildField(){
   const s45=Math.SQRT2/2,lfx=Math.round(HX-OFR*s45),lfy=Math.round(HY-OFR*s45),rfx=Math.round(HX+OFR*s45),rfy=lfy,cfy=HY-OFR;
   const b1x=HX+BASE,b1y=HY-BASE,b2x=HX,b2y=HY-BASE*2,b3x=HX-BASE,b3y=HY-BASE;
-  return `<path d="M${HX},${HY} L${lfx},${lfy} A${OFR},${OFR} 0 0,1 ${rfx},${rfy} Z" fill="#1a3a0a"/>
+  return`<path d="M${HX},${HY} L${lfx},${lfy} A${OFR},${OFR} 0 0,1 ${rfx},${rfy} Z" fill="#1a3a0a"/>
   <path d="M${lfx},${lfy} A${OFR},${OFR} 0 0,1 ${rfx},${rfy}" fill="none" stroke="#e2e8f0" stroke-width="2"/>
   <line x1="${HX}" y1="${HY}" x2="${lfx}" y2="${lfy}" stroke="#e2e8f0" stroke-width="1.5" opacity="0.6"/>
   <line x1="${HX}" y1="${HY}" x2="${rfx}" y2="${rfy}" stroke="#e2e8f0" stroke-width="1.5" opacity="0.6"/>
@@ -346,24 +461,25 @@ function buildDots(abs,filter){
   return d;
 }
 
-// UI helpers
+// --- UI ---
 function show(id){document.getElementById(id).style.display='block';}
 function hide(id){document.getElementById(id).style.display='none';}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function showErr(msg){const el=document.getElementById('error-banner');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',5000);}
 function setSaving(on){document.getElementById('saving-pill').style.display=on?'inline':'none';}
+function setTopbarHeight(){const h=document.getElementById('top-bar').offsetHeight;if(h>0)document.documentElement.style.setProperty('--topbar-h',h+'px');}
 
 function showTopBar(){
   document.getElementById('top-bar').style.display='flex';
   renderTeamDropdown();
+  requestAnimationFrame(setTopbarHeight);
 }
 function renderTeamDropdown(){
-  const sel=document.getElementById('team-select');
-  sel.innerHTML=teamList.map(t=>`<option value="${esc(t)}"${t===activeTeam?' selected':''}>${t}</option>`).join('');
+  document.getElementById('team-select').innerHTML=teamList.map(t=>`<option value="${esc(t)}"${t===activeTeam?' selected':''}>${t}</option>`).join('');
 }
 function selectTeam(t){
-  activeTeam=t; activePlayer=null; activeFilter='all';
-  renderList(); showListView();
+  activeTeam=t;activePlayer=null;activeFilter='all';
+  renderList();renderAnalysis();showListView();
 }
 function renderList(){
   const list=document.getElementById('player-list'),players=playerDB[activeTeam]||{};
@@ -380,15 +496,11 @@ function renderList(){
   });
 }
 
-function showListView(){
-  hide('chart-view'); hide('input-screen');
-  show('list-view'); window.scrollTo(0,0);
-}
-function showChartView(){
-  hide('list-view'); show('chart-view'); window.scrollTo(0,0);
-}
+function showListView(){hide('chart-view');hide('input-screen');show('list-view');window.scrollTo(0,0);}
+function showChartView(){hide('list-view');show('chart-view');window.scrollTo(0,0);}
+
 function renderChart(name){
-  const abs=(playerDB[activeTeam]||{})[name]; if(!abs)return;
+  const abs=(playerDB[activeTeam]||{})[name];if(!abs)return;
   document.getElementById('chart-name').textContent=name;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===activeFilter));
   const svg=document.getElementById('spray-svg');
@@ -405,7 +517,7 @@ function renderChart(name){
     {l:'--'},{l:'K%',v:s['K%']},{l:'BB%',v:s['BB%']},{l:'GB%',v:s['GB%']}
   ].map(r=>r.l==='--'?'<div class="stat-divider"></div>':`<div><div class="stat-label">${r.l}</div><div class="stat-value">${r.v}</div></div>`).join('');
   document.getElementById('play-entries').innerHTML=[...abs].reverse().map(ab=>{
-    const pos=ab.position?` → ${ab.position}`:'',ht=ab.hitType?` (${ab.hitType})`:'';
+    const pos=ab.position?` -> ${ab.position}`:'',ht=ab.hitType?` (${ab.hitType})`:'';
     return`<div class="play-entry"><span class="play-badge ${badgeFor(ab.result)}">${ab.result}</span><span>${ab.half==='top'?'T':'B'}${ab.inning}${pos}${ht}</span></div>`;
   }).join('');
 }
@@ -436,7 +548,7 @@ async function handleParse(){
   allAtBats=parsed;gameCount=newGames.length;
   rebuildDB();activeTeam=teamList[0]||null;activePlayer=null;activeFilter='all';
   setSaving(false);document.getElementById('parse-btn').disabled=false;
-  hide('input-screen');showTopBar();showListView();
+  hide('input-screen');showTopBar();renderList();renderAnalysis();showListView();
 }
 async function handleAppend(){
   const text=document.getElementById('append-text').value.trim();
@@ -453,7 +565,7 @@ async function handleAppend(){
     rebuildDB();if(!teamList.includes(activeTeam))activeTeam=teamList[0];
   }
   setSaving(false);document.getElementById('append-btn').disabled=false;
-  closeAppend();showTopBar();renderList();
+  closeAppend();renderTeamDropdown();renderList();renderAnalysis();
   if(activePlayer&&document.getElementById('chart-view').style.display!=='none')renderChart(activePlayer);
 }
 
