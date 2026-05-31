@@ -178,6 +178,25 @@ const SUPABASE_URL='https://jqddymmlmckupfaexilh.supabase.co';
 const SUPABASE_KEY='sb_publishable_1Fou433EFnrLYTI1ZqQTrg_KNJK8LOP';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
+// -----------------------------------------------------------------------
+// TEAM ALIASES — add entries here whenever a team uses inconsistent names.
+// Left side: the name as it appears in GameChanger play-by-play.
+// Right side: the single canonical name you want to use in the app.
+// After editing, commit to GitHub and Vercel will redeploy automatically.
+// -----------------------------------------------------------------------
+const TEAM_ALIASES = {
+  'TP AA 11U':               'Toronto Playgrounds 11U AA',
+  'TP 11U AA':               'Toronto Playgrounds 11U AA',
+  'Toronto Playgrounds AA':  'Toronto Playgrounds 11U AA',
+  // Add more as needed, e.g.:
+  // 'North York Blues AA':  'North York Blues 11U AA',
+};
+function normalizeTeam(name) {
+  const t = name.trim();
+  return TEAM_ALIASES[t] || t;
+}
+// -----------------------------------------------------------------------
+
 const POSITIONS={'pitcher':'P','catcher':'C','first baseman':'1B','second baseman':'2B','third baseman':'3B','shortstop':'SS','left fielder':'LF','center fielder':'CF','right fielder':'RF'};
 const HX=210,HY=375,BASE=76,OFR=235;
 const ZONE={'P':{x:210,y:300},'C':{x:210,y:384},'1B':{x:280,y:295},'2B':{x:252,y:255},'SS':{x:168,y:255},'3B':{x:140,y:295},'LF':{x:123,y:224},'CF':{x:210,y:200},'RF':{x:297,y:224}};
@@ -224,7 +243,7 @@ function parseText(raw){
   const atBats=[];let team='',inning=0,half='';
   for(const line of lines){
     const im=line.match(/^(Top|Bottom)\s+\d+(?:st|nd|rd|th)\s+-\s+(.+)$/i);
-    if(im){half=im[1].toLowerCase();inning=+(line.match(/(\d+)(?:st|nd|rd|th)/i)||[,0])[1];team=im[2].trim();continue;}
+    if(im){half=im[1].toLowerCase();inning=+(line.match(/(\d+)(?:st|nd|rd|th)/i)||[,0])[1];team=normalizeTeam(im[2]);continue;}
     if(!team)continue;
     const ab=parsePlayLine(line);
     if(ab){ab.team=team;ab.inning=inning;ab.half=half;atBats.push(ab);}
