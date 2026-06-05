@@ -57,6 +57,7 @@ textarea:focus{outline:none;border-color:#3b82f6}
 .drag-handle:active{cursor:grabbing;color:#94a3b8}
 .player-item.drag-src{opacity:0.25}
 .drag-placeholder{background:rgba(37,99,235,0.1);border:1px dashed #2563eb;border-radius:4px;margin:2px 6px;box-sizing:border-box}
+#last-updated-bar{padding:10px 14px 14px;font-size:11px;color:#374151;text-align:center;border-top:1px solid #1e293b;display:none}
 
 #chart-view{display:none;padding:0 0 40px}
 #chart-header{padding:10px 14px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:10px;position:sticky;top:var(--topbar-h,52px);z-index:40;background:#111827}
@@ -147,6 +148,7 @@ textarea:focus{outline:none;border-color:#3b82f6}
   </div>
   <div class="list-header">Players — tap to view spray chart</div>
   <div id="player-list"></div>
+  <div id="last-updated-bar"></div>
 </div>
 
 <div id="chart-view">
@@ -224,17 +226,17 @@ const HIT_FILL='#3b82f6',OUT_FILL='#ef4444';
 const IN_PLAY=new Set(['Single','Double','Triple','HR','Ground Out','Fly Out','Line Out','Pop Out','FC','Error','DP']);
 const HITS=new Set(['Single','Double','Triple','HR']);
 
-let allAtBats=[],playerDB={},teamList=[],activeTeam=null,activePlayer=null,activeFilter='all',gameCount=0,gameFingerprints=[];
+let allAtBats=[],playerDB={},teamList=[],activeTeam=null,activePlayer=null,activeFilter='all',gameCount=0,gameFingerprints=[],lastUpdated=null;
 
 // --- DB ---
 async function loadAllGames(){
   try{
-    const{data,error}=await sb.from('games').select('fingerprint,play_text').order('uploaded_at');
+    const{data,error}=await sb.from('games').select('fingerprint,play_text,uploaded_at').order('uploaded_at');
     if(error)throw error;
     if(data&&data.length>0){
-      for(const row of data){gameFingerprints.push(row.fingerprint);const p=parseText(row.play_text);allAtBats=[...allAtBats,...p];gameCount++;}
+      for(const row of data){gameFingerprints.push(row.fingerprint);const p=parseText(row.play_text);allAtBats=[...allAtBats,...p];gameCount++;if(row.uploaded_at&&(!lastUpdated||row.uploaded_at>lastUpdated))lastUpdated=row.uploaded_at;}
       rebuildDB();activeTeam=teamList[0]||null;loadCustomOrder();
-      hide('loading-screen');showTopBar();renderList();renderAnalysis();initDrag();initSwipe();showListView();
+      hide('loading-screen');showTopBar();renderList();renderAnalysis();renderLastUpdated();initDrag();initSwipe();showListView();
     }else{hide('loading-screen');show('input-screen');}
   }catch(e){console.error(e);hide('loading-screen');show('input-screen');}
 }
@@ -603,7 +605,7 @@ async function handleParse(){
   allAtBats=parsed;gameCount=newGames.length;
   rebuildDB();activeTeam=teamList[0]||null;activePlayer=null;activeFilter='all';
   setSaving(false);document.getElementById('parse-btn').disabled=false;
-  hide('input-screen');showTopBar();renderList();renderAnalysis();showListView();
+  lastUpdated=new Date().toISOString();hide('input-screen');showTopBar();renderList();renderAnalysis();renderLastUpdated();showListView();
 }
 async function handleAppend(){
   const text=document.getElementById('append-text').value.trim();
@@ -620,7 +622,7 @@ async function handleAppend(){
     rebuildDB();if(!teamList.includes(activeTeam))activeTeam=teamList[0];
   }
   setSaving(false);document.getElementById('append-btn').disabled=false;
-  closeAppend();renderTeamDropdown();renderList();renderAnalysis();
+  lastUpdated=new Date().toISOString();closeAppend();renderTeamDropdown();renderList();renderAnalysis();renderLastUpdated();
   if(activePlayer&&document.getElementById('chart-view').style.display!=='none')renderChart(activePlayer);
 }
 
@@ -697,6 +699,17 @@ function initSwipe(){
     const dy=e.changedTouches[0].clientY-sy;
     if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)navPlayer(dx<0?1:-1);
   },{passive:true});
+}
+function fmtDate(iso){
+  if(!iso)return'';
+  const d=new Date(iso);
+  return d.toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+}
+function renderLastUpdated(){
+  const bar=document.getElementById('last-updated-bar');
+  if(!bar)return;
+  if(lastUpdated){bar.textContent='Last updated '+fmtDate(lastUpdated);bar.style.display='block';}
+  else{bar.style.display='none';}
 }
 loadAllGames();
 </script>
