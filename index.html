@@ -63,6 +63,10 @@ textarea:focus{outline:none;border-color:#3b82f6}
 .back-btn{background:#1e293b;border:1px solid #334155;border-radius:6px;color:#60a5fa;font-size:13px;padding:6px 12px;cursor:pointer;white-space:nowrap}
 .back-btn:active{background:#263148}
 .chart-player-name{font-size:17px;font-weight:700;color:#f1f5f9;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart-nav{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.chart-nav-btn{background:#1e293b;border:1px solid #334155;border-radius:6px;color:#60a5fa;font-size:20px;line-height:1;padding:3px 9px;cursor:pointer}
+.chart-nav-btn:disabled{color:#1e3a5f;border-color:#1e293b;cursor:default}
+.chart-pos{font-size:11px;color:#64748b;white-space:nowrap;min-width:28px;text-align:center}
 
 #svg-wrapper{width:100%;padding:12px 14px}
 #spray-svg{width:100%;height:auto;display:block}
@@ -144,6 +148,11 @@ textarea:focus{outline:none;border-color:#3b82f6}
   <div id="chart-header">
     <button class="back-btn" onclick="showListView()">&#8592; Players</button>
     <div class="chart-player-name" id="chart-name"></div>
+    <div class="chart-nav">
+      <button class="chart-nav-btn" id="prev-btn" onclick="navPlayer(-1)" title="Previous player">&#8249;</button>
+      <span class="chart-pos" id="player-pos"></span>
+      <button class="chart-nav-btn" id="next-btn" onclick="navPlayer(1)" title="Next player">&#8250;</button>
+    </div>
   </div>
   <div class="filter-row">
     <button class="filter-btn active" data-filter="all" onclick="applyFilter(this)">All BIP</button>
@@ -218,7 +227,7 @@ async function loadAllGames(){
     if(data&&data.length>0){
       for(const row of data){gameFingerprints.push(row.fingerprint);const p=parseText(row.play_text);allAtBats=[...allAtBats,...p];gameCount++;}
       rebuildDB();activeTeam=teamList[0]||null;loadCustomOrder();
-      hide('loading-screen');showTopBar();renderList();renderAnalysis();initDrag();showListView();
+      hide('loading-screen');showTopBar();renderList();renderAnalysis();initDrag();initSwipe();showListView();
     }else{hide('loading-screen');show('input-screen');}
   }catch(e){console.error(e);hide('loading-screen');show('input-screen');}
 }
@@ -526,6 +535,14 @@ function showChartView(){hide('list-view');show('chart-view');window.scrollTo(0,
 function renderChart(name){
   const abs=(playerDB[activeTeam]||{})[name];if(!abs)return;
   document.getElementById('chart-name').textContent=name;
+  // Update position indicator and nav buttons
+  const allP=getSortedPlayers(activeTeam);
+  const pi=allP.indexOf(name);
+  const posEl=document.getElementById('player-pos');
+  if(posEl)posEl.textContent=(pi+1)+'/'+allP.length;
+  const pb=document.getElementById('prev-btn'),nb=document.getElementById('next-btn');
+  if(pb)pb.disabled=pi<=0;
+  if(nb)nb.disabled=pi>=allP.length-1;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===activeFilter));
   const svg=document.getElementById('spray-svg');
   const bip=abs.filter(ab=>IN_PLAY.has(ab.result)&&ab.position&&ZONE[ab.position]);
@@ -648,10 +665,27 @@ function dMD(e){const h=e.target.closest('.drag-handle');if(!h)return;dItem=h.cl
 function dMM(e){dMove(e.clientY);}
 function dMU(){dEnd();document.removeEventListener('mousemove',dMM);document.removeEventListener('mouseup',dMU);}
 
+function navPlayer(dir){
+  const players=getSortedPlayers(activeTeam);
+  const idx=players.indexOf(activePlayer);
+  const next=idx+dir;
+  if(next<0||next>=players.length)return;
+  activePlayer=players[next];activeFilter='all';
+  renderChart(activePlayer);
+  window.scrollTo(0,0);
+}
+function initSwipe(){
+  let sx=0,sy=0;
+  const cv=document.getElementById('chart-view');
+  cv.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  cv.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-sx;
+    const dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)navPlayer(dx<0?1:-1);
+  },{passive:true});
+}
 loadAllGames();
 </script>
 </body>
 </html>
-</script>
-</body>
-</html>
+</s
