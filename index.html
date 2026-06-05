@@ -627,7 +627,7 @@ function dBegin(r,clientY){
 function dMove(clientY){
   if(!dItem)return;
   dItem.style.top=(clientY-dOffY)+'px';
-  const items=[...document.querySelectorAll('#player-list .player-item')];
+  const items=[...document.querySelectorAll('#player-list .player-item')].filter(it=>it!==dItem);
   let before=null;
   for(const it of items){const r=it.getBoundingClientRect();if(clientY<r.top+r.height/2){before=it;break;}}
   if(before)dHolder.parentNode.insertBefore(dHolder,before);
@@ -649,6 +649,9 @@ function dMM(e){dMove(e.clientY);}
 function dMU(){dEnd();document.removeEventListener('mousemove',dMM);document.removeEventListener('mouseup',dMU);}
 
 loadAllGames();
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>
