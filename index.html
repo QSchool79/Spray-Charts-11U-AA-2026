@@ -67,6 +67,11 @@ textarea:focus{outline:none;border-color:#3b82f6}
 .chart-nav-btn{background:#1e293b;border:1px solid #334155;border-radius:6px;color:#60a5fa;font-size:20px;line-height:1;padding:3px 9px;cursor:pointer}
 .chart-nav-btn:disabled{color:#1e3a5f;border-color:#1e293b;cursor:default}
 .chart-pos{font-size:11px;color:#64748b;white-space:nowrap;min-width:28px;text-align:center}
+#chart-content{overflow:hidden}
+@keyframes slideFromRight{from{transform:translateX(48px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideFromLeft{from{transform:translateX(-48px);opacity:0}to{transform:translateX(0);opacity:1}}
+.anim-right{animation:slideFromRight .22s ease-out}
+.anim-left{animation:slideFromLeft .22s ease-out}
 
 #svg-wrapper{width:100%;padding:12px 14px}
 #spray-svg{width:100%;height:auto;display:block}
@@ -154,6 +159,7 @@ textarea:focus{outline:none;border-color:#3b82f6}
       <button class="chart-nav-btn" id="next-btn" onclick="navPlayer(1)" title="Next player">&#8250;</button>
     </div>
   </div>
+  <div id="chart-content">
   <div class="filter-row">
     <button class="filter-btn active" data-filter="all" onclick="applyFilter(this)">All BIP</button>
     <button class="filter-btn" data-filter="hits" onclick="applyFilter(this)">Hits Only</button>
@@ -170,6 +176,7 @@ textarea:focus{outline:none;border-color:#3b82f6}
   <div class="log-section" style="margin-top:14px">
     <div class="log-title">At-Bats</div>
     <div id="play-entries"></div>
+  </div>
   </div>
 </div>
 
@@ -532,7 +539,7 @@ function renderList(){
 function showListView(){hide('chart-view');hide('input-screen');show('list-view');window.scrollTo(0,0);}
 function showChartView(){hide('list-view');show('chart-view');window.scrollTo(0,0);}
 
-function renderChart(name){
+function renderChart(name,slideDir){
   const abs=(playerDB[activeTeam]||{})[name];if(!abs)return;
   document.getElementById('chart-name').textContent=name;
   // Update position indicator and nav buttons
@@ -561,6 +568,13 @@ function renderChart(name){
     const pos=ab.position?` -> ${ab.position}`:'',ht=ab.hitType?` (${ab.hitType})`:'';
     return`<div class="play-entry"><span class="play-badge ${badgeFor(ab.result)}">${ab.result}</span><span>${ab.half==='top'?'T':'B'}${ab.inning}${pos}${ht}</span></div>`;
   }).join('');
+  // Slide animation
+  if(slideDir!==undefined){
+    const cc=document.getElementById('chart-content');
+    cc.classList.remove('anim-right','anim-left');
+    void cc.offsetWidth;
+    cc.classList.add(slideDir>0?'anim-right':'anim-left');
+  }
 }
 function applyFilter(btn){
   activeFilter=btn.dataset.filter;
@@ -671,7 +685,7 @@ function navPlayer(dir){
   const next=idx+dir;
   if(next<0||next>=players.length)return;
   activePlayer=players[next];activeFilter='all';
-  renderChart(activePlayer);
+  renderChart(activePlayer,dir);
   window.scrollTo(0,0);
 }
 function initSwipe(){
