@@ -53,6 +53,10 @@ textarea:focus{outline:none;border-color:#3b82f6}
 .player-name{font-size:14px;font-weight:600;color:#e2e8f0}
 .player-line{font-size:11px;color:#64748b;margin-top:3px}
 .player-avg{font-size:16px;font-weight:700;color:#94a3b8;flex-shrink:0;margin-left:10px}
+.drag-handle{color:#475569;font-size:16px;padding:0 10px 0 0;cursor:grab;flex-shrink:0;touch-action:none;user-select:none;display:flex;align-items:center}
+.drag-handle:active{cursor:grabbing;color:#94a3b8}
+.player-item.drag-src{opacity:0.25}
+.drag-placeholder{background:rgba(37,99,235,0.1);border:1px dashed #2563eb;border-radius:4px;margin:2px 6px;box-sizing:border-box}
 
 #chart-view{display:none;padding:0 0 40px}
 #chart-header{padding:10px 14px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:10px;position:sticky;top:var(--topbar-h,52px);z-index:40;background:#111827}
@@ -213,8 +217,8 @@ async function loadAllGames(){
     if(error)throw error;
     if(data&&data.length>0){
       for(const row of data){gameFingerprints.push(row.fingerprint);const p=parseText(row.play_text);allAtBats=[...allAtBats,...p];gameCount++;}
-      rebuildDB();activeTeam=teamList[0]||null;
-      hide('loading-screen');showTopBar();renderList();renderAnalysis();showListView();
+      rebuildDB();activeTeam=teamList[0]||null;loadCustomOrder();
+      hide('loading-screen');showTopBar();renderList();renderAnalysis();initDrag();showListView();
     }else{hide('loading-screen');show('input-screen');}
   }catch(e){console.error(e);hide('loading-screen');show('input-screen');}
 }
@@ -502,11 +506,12 @@ function selectTeam(t){
 }
 function renderList(){
   const list=document.getElementById('player-list'),players=playerDB[activeTeam]||{};
-  const sorted=Object.keys(players).sort((a,b)=>calcStats(players[b]).PA-calcStats(players[a]).PA);
+  const sorted=getSortedPlayers(activeTeam);
   list.innerHTML=sorted.map(name=>{
     const s=calcStats(players[name]);
     return`<div class="player-item" data-name="${esc(name)}">
-      <div><div class="player-name">${name}</div>
+      <div class="drag-handle" title="Drag to reorder">⠿</div>
+      <div style="flex:1;min-width:0"><div class="player-name">${name}</div>
       <div class="player-line">${s.PA} PA &nbsp;·&nbsp; ${s.H}/${s.AB} &nbsp;·&nbsp; ${s.K}K ${s.BB}BB</div></div>
       <div class="player-avg">${s.AVG}</div></div>`;
   }).join('');
@@ -587,6 +592,61 @@ async function handleAppend(){
   closeAppend();renderTeamDropdown();renderList();renderAnalysis();
   if(activePlayer&&document.getElementById('chart-view').style.display!=='none')renderChart(activePlayer);
 }
+
+// --- Custom player order (localStorage) ---
+let customOrder={};
+function loadCustomOrder(){try{customOrder=JSON.parse(localStorage.getItem('sprayPlayerOrder')||'{}');}catch(e){customOrder={};}}
+function saveCustomOrder(){try{localStorage.setItem('sprayPlayerOrder',JSON.stringify(customOrder));}catch(e){}}
+function getSortedPlayers(team){
+  const players=playerDB[team]||{};
+  const all=Object.keys(players);
+  const saved=customOrder[team]||[];
+  const inOrder=saved.filter(n=>all.includes(n));
+  const remaining=all.filter(n=>!inOrder.includes(n)).sort((a,b)=>calcStats(players[b]).PA-calcStats(players[a]).PA);
+  return[...inOrder,...remaining];
+}
+
+// --- Drag to reorder ---
+let dItem=null,dHolder=null,dOffY=0;
+function initDrag(){
+  const L=document.getElementById('player-list');
+  L.addEventListener('touchstart',dTS,{passive:false});
+  L.addEventListener('touchmove',dTM,{passive:false});
+  L.addEventListener('touchend',dTE);
+  L.addEventListener('touchcancel',dTE);
+  L.addEventListener('mousedown',dMD);
+}
+function dBegin(r,clientY){
+  dHolder=document.createElement('div');
+  dHolder.className='drag-placeholder';
+  dHolder.style.height=r.height+'px';
+  dItem.parentNode.insertBefore(dHolder,dItem.nextSibling);
+  dItem.classList.add('drag-src');
+  dItem.style.cssText=`position:fixed;left:${r.left}px;top:${clientY-dOffY}px;width:${r.width}px;z-index:1000;background:#1e293b;border:1px solid #3b82f6;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.6);`;
+}
+function dMove(clientY){
+  if(!dItem)return;
+  dItem.style.top=(clientY-dOffY)+'px';
+  const items=[...document.querySelectorAll('#player-list .player-item')];
+  let before=null;
+  for(const it of items){const r=it.getBoundingClientRect();if(clientY<r.top+r.height/2){before=it;break;}}
+  if(before)dHolder.parentNode.insertBefore(dHolder,before);
+  else document.getElementById('player-list').appendChild(dHolder);
+}
+function dEnd(){
+  if(!dItem)return;
+  dItem.style.cssText='';dItem.classList.remove('drag-src');
+  dHolder.parentNode.insertBefore(dItem,dHolder);dHolder.remove();
+  customOrder[activeTeam]=[...document.querySelectorAll('#player-list .player-item')].map(el=>el.dataset.name);
+  saveCustomOrder();
+  dItem=null;dHolder=null;
+}
+function dTS(e){const h=e.target.closest('.drag-handle');if(!h)return;e.preventDefault();dItem=h.closest('.player-item');if(!dItem)return;const t=e.touches[0],r=dItem.getBoundingClientRect();dOffY=t.clientY-r.top;dBegin(r,t.clientY);}
+function dTM(e){if(!dItem)return;e.preventDefault();dMove(e.touches[0].clientY);}
+function dTE(){dEnd();}
+function dMD(e){const h=e.target.closest('.drag-handle');if(!h)return;dItem=h.closest('.player-item');if(!dItem)return;const r=dItem.getBoundingClientRect();dOffY=e.clientY-r.top;dBegin(r,e.clientY);document.addEventListener('mousemove',dMM);document.addEventListener('mouseup',dMU);}
+function dMM(e){dMove(e.clientY);}
+function dMU(){dEnd();document.removeEventListener('mousemove',dMM);document.removeEventListener('mouseup',dMU);}
 
 loadAllGames();
 </script>
